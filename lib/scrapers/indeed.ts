@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import { v4 as uuidv4 } from 'uuid';
+import { chromium } from 'playwright';
 import { Job } from './types';
 
 const USER_AGENT =
@@ -16,26 +17,6 @@ function buildUrl(keywords: string, location: string, start: number = 0): string
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function fetchPage(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-      },
-    });
-    if (!res.ok) {
-      console.warn(`[Indeed] HTTP ${res.status} for ${url}`);
-      return null;
-    }
-    return await res.text();
-  } catch (err) {
-    console.error('[Indeed] Fetch error:', err);
-    return null;
-  }
 }
 
 function parseJobCards(html: string): Job[] {
@@ -133,28 +114,42 @@ export async function scrapeIndeed(
   maxPages: number = 2
 ): Promise<Job[]> {
   const allJobs: Job[] = [];
+  let browser;
 
-  for (let page = 0; page < maxPages; page++) {
-    const start = page * 10;
-    const url = buildUrl(keywords, location, start);
-    console.log(`[Indeed] Scraping page ${page + 1}: ${url}`);
+  try {
+    browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext({ userAgent: USER_AGENT });
+    const pageObj = await context.newPage();
 
-    const html = await fetchPage(url);
-    if (!html) {
-      console.warn(`[Indeed] Failed to fetch page ${page + 1}`);
-      break;
+    for (let page = 0; page < maxPages; page++) {
+      const start = page * 10;
+      const url = buildUrl(keywords, location, start);
+      console.log(`[Indeed] Scraping page ${page + 1}: ${url}`);
+
+      try {
+        await pageObj.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        // Give the page a moment to load dynamic react components or CF checks
+        await pageObj.waitForTimeout(2000);
+
+        const html = await pageObj.content();
+        const jobs = parseJobCards(html);
+        console.log(`[Indeed] Found ${jobs.length} jobs on page ${page + 1}`);
+
+        if (jobs.length === 0) break;
+        allJobs.push(...jobs);
+      } catch (err) {
+        console.warn(`[Indeed] Failed to fetch page ${page + 1}`, err);
+        break;
+      }
+
+      if (page < maxPages - 1) {
+        await delay(2000 + Math.random() * 1000);
+      }
     }
-
-    const jobs = parseJobCards(html);
-    console.log(`[Indeed] Found ${jobs.length} jobs on page ${page + 1}`);
-
-    if (jobs.length === 0) break;
-    allJobs.push(...jobs);
-
-    // Respectful delay between pages
-    if (page < maxPages - 1) {
-      await delay(2000 + Math.random() * 1000);
-    }
+  } catch (err) {
+    console.error('[Indeed] Browser launch failed', err);
+  } finally {
+    if (browser) await browser.close();
   }
 
   return allJobs;

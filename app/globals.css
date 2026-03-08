@@ -1,93 +1,142 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* ─── Dark Theme (default) ─── */
-[data-theme='dark'] {
-  --bg-primary: #08080f;
-  --bg-secondary: #111119;
-  --bg-card: rgba(255, 255, 255, 0.035);
-  --bg-card-hover: rgba(255, 255, 255, 0.065);
-  --bg-glass: rgba(255, 255, 255, 0.05);
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-accent: rgba(167, 139, 250, 0.35);
+@layer base {
+  :root {
+    /* Modern, Soothing Light Mode (Zinc-inspired) */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 4% 35%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 262 83% 58%;
+    --radius: 0.75rem;
 
-  --text-primary: #f4f4f8;
-  --text-secondary: #a0a0b8;
-  --text-muted: #5e5e76;
+    /* Legacy glass tokens softened */
+    --bg-primary: #fafafa;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.7);
+    --bg-card-hover: rgba(255, 255, 255, 0.95);
+    --bg-glass: rgba(255, 255, 255, 0.6);
+    --border-subtle: rgba(0, 0, 0, 0.05);
+    --border-accent: rgba(124, 58, 237, 0.15);
+    --text-primary: #18191c;
+    --text-secondary: #3f3f46;
+    /* zinc-700 */
+    --text-muted: #52525b;
+    /* zinc-600 */
 
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 48px rgba(167, 139, 250, 0.12);
-  --shadow-btn: 0 8px 32px rgba(124, 58, 237, 0.3);
+    /* Softer Shadows */
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 15px -5px rgba(0, 0, 0, 0.02);
+    --shadow-glow: 0 0 32px rgba(124, 58, 237, 0.05);
+    --shadow-btn: 0 4px 14px rgba(124, 58, 237, 0.15);
 
-  --hero-orb-1: rgba(124, 58, 237, 0.1);
-  --hero-orb-2: rgba(56, 189, 248, 0.06);
-  --hero-orb-3: rgba(52, 211, 153, 0.05);
+    /* Background Orbs (very subtle in light mode) */
+    --hero-orb-1: rgba(124, 58, 237, 0.04);
+    --hero-orb-2: rgba(56, 189, 248, 0.03);
+    --hero-orb-3: rgba(52, 211, 153, 0.02);
 
-  --dropzone-hover-bg: rgba(124, 58, 237, 0.06);
-  --dropzone-success-bg: rgba(52, 211, 153, 0.06);
-  --focus-ring: rgba(124, 58, 237, 0.2);
+    /* Accent Palette */
+    --accent-violet: #8b5cf6;
+    --accent-purple: #a855f7;
+    --accent-indigo: #6366f1;
+    --accent-sky: #0ea5e9;
+    --accent-teal: #14b8a6;
+    --accent-rose: #f43f5e;
+    --accent-amber: #f59e0b;
+    --accent-green: #10b981;
+    --accent-blue: #3b82f6;
+    --accent-pink: #ec4899;
+    --accent-orange: #f97316;
 
-  --skeleton-from: rgba(255, 255, 255, 0.04);
-  --skeleton-mid: rgba(255, 255, 255, 0.07);
+    --gradient-hero: linear-gradient(135deg, #8b5cf6 0%, #6366f1 35%, #0ea5e9 70%, #14b8a6 100%);
+    --gradient-btn: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #0ea5e9 100%);
+    --gradient-card: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(99, 102, 241, 0.03));
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+
+    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark,
+  [data-theme='dark'] {
+    /* Modern, Soothing Dark Mode (Zinc-inspired) */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+
+    /* Soft Dark Mappings (Not pure black, soothing to eyes) */
+    --bg-primary: #09090b;
+    /* zinc-950 */
+    --bg-secondary: #18181b;
+    /* zinc-900 */
+    --bg-card: rgba(24, 24, 27, 0.6);
+    --bg-card-hover: rgba(39, 39, 42, 0.8);
+    --bg-glass: rgba(24, 24, 27, 0.5);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-accent: rgba(139, 92, 246, 0.25);
+    --text-primary: #fafafa;
+    --text-secondary: #d4d4d8;
+    /* zinc-300 */
+    --text-muted: #a1a1aa;
+    /* zinc-400 */
+
+    /* Soother glow shadows */
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+    --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.08);
+    --shadow-btn: 0 6px 20px rgba(139, 92, 246, 0.2);
+
+    /* Orbs slightly more subtle for dark mode */
+    --hero-orb-1: rgba(139, 92, 246, 0.05);
+    --hero-orb-2: rgba(14, 165, 233, 0.04);
+    --hero-orb-3: rgba(20, 184, 166, 0.03);
+  }
 }
 
-/* ─── Light Theme ─── */
-[data-theme='light'] {
-  --bg-primary: #f8f9fc;
-  --bg-secondary: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --bg-card-hover: rgba(255, 255, 255, 0.95);
-  --bg-glass: rgba(255, 255, 255, 0.7);
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --border-accent: rgba(124, 58, 237, 0.25);
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-  --text-primary: #1a1a2e;
-  --text-secondary: #555570;
-  --text-muted: #8888a0;
-
-  --shadow-card: 0 2px 16px rgba(0, 0, 0, 0.06);
-  --shadow-glow: 0 0 32px rgba(124, 58, 237, 0.08);
-  --shadow-btn: 0 6px 24px rgba(124, 58, 237, 0.2);
-
-  --hero-orb-1: rgba(124, 58, 237, 0.06);
-  --hero-orb-2: rgba(56, 189, 248, 0.05);
-  --hero-orb-3: rgba(52, 211, 153, 0.04);
-
-  --dropzone-hover-bg: rgba(124, 58, 237, 0.04);
-  --dropzone-success-bg: rgba(52, 211, 153, 0.05);
-  --focus-ring: rgba(124, 58, 237, 0.15);
-
-  --skeleton-from: rgba(0, 0, 0, 0.04);
-  --skeleton-mid: rgba(0, 0, 0, 0.07);
-}
-
-/* ─── Shared Tokens ─── */
-:root {
-  /* Refined accent palette — richer, more saturated */
-  --accent-violet: #7c3aed;
-  --accent-purple: #a78bfa;
-  --accent-indigo: #6366f1;
-  --accent-sky: #38bdf8;
-  --accent-teal: #34d399;
-  --accent-rose: #f43f5e;
-  --accent-amber: #fbbf24;
-  --accent-green: #34d399;
-  --accent-blue: #60a5fa;
-  --accent-pink: #f472b6;
-  --accent-orange: #fb923c;
-
-  --gradient-hero: linear-gradient(135deg, #7c3aed 0%, #6366f1 35%, #38bdf8 70%, #34d399 100%);
-  --gradient-btn: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #38bdf8 100%);
-  --gradient-card: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(99, 102, 241, 0.04));
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-  --radius-full: 999px;
-
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 * {

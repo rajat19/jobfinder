@@ -25,25 +25,27 @@ export async function scrapeAllPlatforms(
     instahyre: (kw, loc) => scrapeInstahyre(kw, loc),
   };
 
-  // Run scrapers sequentially to be respectful
-  for (const platform of params.platforms) {
-    const scraper = scraperMap[platform];
-    if (!scraper) continue;
+  // Run scrapers concurrently
+  await Promise.allSettled(
+    params.platforms.map(async (platform) => {
+      const scraper = scraperMap[platform];
+      if (!scraper) return;
 
-    try {
-      console.log(`[Aggregator] Starting ${platform} scraper...`);
-      const jobs = await scraper(params.keywords, params.location);
-      allJobs.push(...jobs);
-      if (onProgress) {
-        onProgress(platform, jobs);
+      try {
+        console.log(`[Aggregator] Starting ${platform} scraper...`);
+        const jobs = await scraper(params.keywords, params.location);
+        allJobs.push(...jobs);
+        if (onProgress) {
+          onProgress(platform, jobs);
+        }
+      } catch (err) {
+        console.error(`[Aggregator] ${platform} scraper failed:`, err);
+        if (onProgress) {
+          onProgress(platform, []);
+        }
       }
-    } catch (err) {
-      console.error(`[Aggregator] ${platform} scraper failed:`, err);
-      if (onProgress) {
-        onProgress(platform, []);
-      }
-    }
-  }
+    })
+  );
 
   const uniqueJobs = deduplicateJobs(allJobs);
   console.log(
