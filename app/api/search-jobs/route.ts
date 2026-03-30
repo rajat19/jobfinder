@@ -61,20 +61,29 @@ export async function POST(request: NextRequest) {
           });
 
           // Step 2: Match jobs against resume
-          const results = await matchJobs(resumeData, allJobs, (result, index, total) => {
-            send({
-              type: 'result',
-              result,
-              completed: index + 1,
-              total,
-              message: `Matched ${index + 1}/${total} jobs`,
-            });
-          });
+          const { results: matchResults, queryNote, queryMatchCount } = await matchJobs(
+            resumeData,
+            allJobs,
+            (result, index, total) => {
+              send({
+                type: 'result',
+                result,
+                completed: index + 1,
+                total,
+                message: `Matched ${index + 1}/${total} jobs`,
+              });
+            },
+            20,
+            keywords,
+            location
+          );
 
           send({
             type: 'done',
-            results,
-            message: `Completed! Matched ${results.length} jobs.`,
+            results: matchResults,
+            message: queryNote || `Completed! Matched ${matchResults.length} jobs.`,
+            queryNote,
+            queryMatchCount,
           });
         } catch (error) {
           console.error('[Search] Error:', error);

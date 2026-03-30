@@ -24,7 +24,18 @@ export function ResumePreview({ resumeData }: ResumePreviewProps) {
 
       {resumeData.experience && resumeData.experience.length > 0 && (
         <div className="mb-6">
-          <h3 className="font-semibold mb-3">💼 Experience</h3>
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <h3 className="font-semibold">💼 Experience</h3>
+            {resumeData.totalExperienceYears != null ? (
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
+                ~{resumeData.totalExperienceYears} years total
+              </Badge>
+            ) : resumeData.experienceNote ? (
+              <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs">
+                ⚠️ {resumeData.experienceNote}
+              </Badge>
+            ) : null}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
             {resumeData.experience.map((exp, i) => (
               <Card
@@ -40,9 +51,18 @@ export function ResumePreview({ resumeData }: ResumePreviewProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
-                  <p className="text-xs text-muted-foreground font-mono mb-3">
-                    {exp.duration || ''}
-                  </p>
+                  <div className="flex items-center gap-2 mb-3">
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {exp.duration || ''}
+                    </p>
+                    {exp.durationMonths != null && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border/60 text-muted-foreground">
+                        {exp.durationMonths >= 12
+                          ? `${Math.floor(exp.durationMonths / 12)}y ${exp.durationMonths % 12}m`
+                          : `${exp.durationMonths}m`}
+                      </Badge>
+                    )}
+                  </div>
                   {exp.skills && exp.skills.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {exp.skills.map((s, j) => (

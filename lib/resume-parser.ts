@@ -1,5 +1,5 @@
 import { PDFParse } from 'pdf-parse';
-import { aiClient } from './ai/ollama';
+import { aiClient } from './ai';
 import { ResumeData } from './scrapers/types';
 
 const SKILL_KEYWORDS = [
@@ -162,6 +162,43 @@ function extractSummary(text: string): string {
   return lines.slice(0, 3).join(' ').slice(0, 500);
 }
 
+/**
+ * Parse a date string like "Jan 2020", "March 2021", "2019", "Present", "Current" into a Date.
+ * Returns null if unparseable.
+ */
+function parseDateString(dateStr: string | undefined): Date | null {
+  if (!dateStr) return null;
+  const trimmed = dateStr.trim();
+
+  // Handle "Present" / "Current" / "Now"
+  if (/^(present|current|now|today|ongoing)$/i.test(trimmed)) {
+    return new Date();
+  }
+
+  // Try native parsing first (handles "Jan 2020", "March 2021", "2020-01", etc.)
+  const parsed = new Date(trimmed);
+  if (!isNaN(parsed.getTime())) {
+    return parsed;
+  }
+
+  // Handle bare year like "2019"
+  const yearMatch = trimmed.match(/^(\d{4})$/);
+  if (yearMatch) {
+    return new Date(parseInt(yearMatch[1]), 0, 1);
+  }
+
+  return null;
+}
+
+/**
+ * Calculate months between two dates. Returns null if either date is null.
+ */
+function calcMonthsBetween(start: Date | null, end: Date | null): number | null {
+  if (!start || !end) return null;
+  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  return Math.max(1, months); // at least 1 month
+}
+
 export async function parseResume(buffer: Buffer | ArrayBuffer): Promise<ResumeData> {
   const dataArray = buffer instanceof Buffer ? new Uint8Array(buffer) : new Uint8Array(buffer);
   const parser = new PDFParse({ data: dataArray });
@@ -179,7 +216,9 @@ DO NOT output any explanations. Output ONLY valid JSON matching this schema:
     {
       "company": "Company Name",
       "role": "Job Title",
-      "duration": "Duration (e.g. 2020-2023)",
+      "duration": "Duration (e.g. Jan 2020 - Mar 2023)",
+      "startDate": "Start date (e.g. Jan 2020, 2019, etc.)",
+      "endDate": "End date (e.g. Mar 2023, Present, etc.)",
       "skills": ["skills", "used", "here"]
     }
   ],
@@ -197,6 +236,10 @@ DO NOT output any explanations. Output ONLY valid JSON matching this schema:
   }
 }
 
+IMPORTANT: For each experience entry, extract the exact startDate and endDate as separate fields from the duration text.
+If the person is currently working there, set endDate to "Present".
+If a date cannot be determined, leave that field as an empty string.
+
 RESUME TEXT:
 ${rawText.slice(0, 8000)}
 
@@ -207,11 +250,10 @@ JSON OUTPUT:
     const response = await aiClient.generate({
       prompt,
       strictJson: true,
-      maxJsonRetries: 1, // Let aiwrap handle repair if necessary
+      maxJsonRetries: 1,
       temperature: 0.0,
     });
 
-    // Since we used strictJson, aiwrap parsed it for us
     const parsed = response.json as {
       skills?: string[];
       summary?: string;
@@ -219,6 +261,8 @@ JSON OUTPUT:
         company: string;
         role: string;
         duration: string;
+        startDate?: string;
+        endDate?: string;
         skills: string[];
       }[];
       education?: {
@@ -237,12 +281,45 @@ JSON OUTPUT:
       throw new Error('No JSON object found in response');
     }
 
+    // Calculate experience durations
+    const experiences = Array.isArray(parsed.experience) ? parsed.experience : [];
+    let hasMissingTimeline = false;
+    let totalMonths = 0;
+
+    const enrichedExperience = experiences.map((exp) => {
+      const startParsed = parseDateString(exp.startDate);
+      const endParsed = parseDateString(exp.endDate);
+      const months = calcMonthsBetween(startParsed, endParsed);
+
+      if (months === null) {
+        hasMissingTimeline = true;
+      } else {
+        totalMonths += months;
+      }
+
+      return {
+        ...exp,
+        startDate: exp.startDate || undefined,
+        endDate: exp.endDate || undefined,
+        durationMonths: months ?? undefined,
+      };
+    });
+
+    const totalExperienceYears = hasMissingTimeline
+      ? undefined
+      : Math.round((totalMonths / 12) * 10) / 10;
+    const experienceNote = hasMissingTimeline
+      ? 'Timeline for some experiences may be missing'
+      : undefined;
+
     return {
       rawText,
       skills: Array.isArray(parsed.skills) ? parsed.skills : [],
-      summary: parsed.summary || extractSummary(rawText), // fallback to old logic if empty
-      experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+      summary: parsed.summary || extractSummary(rawText),
+      experience: enrichedExperience,
       education: Array.isArray(parsed.education) ? parsed.education : [],
+      totalExperienceYears,
+      experienceNote,
       recommendedKeywords: Array.isArray(parsed.recommendations?.keywords)
         ? parsed.recommendations.keywords
         : [],
@@ -255,7 +332,6 @@ JSON OUTPUT:
     };
   } catch (err) {
     console.error('[Resume Parser] AI extraction failed, falling back to basic extraction:', err);
-    // Fallback to heuristic logic if AI fails
     const skills = extractSkills(rawText);
     const experienceText = extractSection(rawText, [
       'experience',
@@ -279,6 +355,7 @@ JSON OUTPUT:
           ? [{ degree: 'Unknown', institution: 'Unknown', year: 'Unknown' }]
           : [],
       summary,
+      experienceNote: 'Timeline for some experiences may be missing',
     };
   }
 }

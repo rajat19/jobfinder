@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Explain GitHub Pages limitation
+        run: |
+          echo "jobfinder currently cannot be deployed to GitHub Pages."
+          echo "Reason: the app uses Next.js API routes and server-side logic for"
+          echo "resume parsing, scraping, and streaming responses."
+          echo ""
+          echo "GitHub Pages can only host static files."
+          echo ""
+          echo "To make Pages deployment work, convert this app to a static export"
+          echo "and move backend functionality to an external service."
+          exit 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ false }}
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

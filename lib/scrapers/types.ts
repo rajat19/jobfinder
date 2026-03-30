@@ -22,6 +22,9 @@ export interface ExperienceEntry {
   company: string;
   role: string;
   duration: string;
+  startDate?: string;
+  endDate?: string;
+  durationMonths?: number;
   skills: string[];
 }
 
@@ -37,6 +40,8 @@ export interface ResumeData {
   experience: ExperienceEntry[];
   education: EducationEntry[];
   summary: string;
+  totalExperienceYears?: number;
+  experienceNote?: string;
   recommendedKeywords?: string[];
   recommendedLocations?: string[];
   recommendedJobTitles?: string[];
@@ -48,6 +53,8 @@ export interface MatchResult {
   matchedSkills: string[];
   missingSkills: string[];
   summary: string;
+  queryMatch?: boolean;
+  locationMatch?: boolean;
 }
 
 export interface SearchProgress {
@@ -59,4 +66,6 @@ export interface SearchProgress {
   results?: MatchResult[];
   total?: number;
   completed?: number;
+  queryNote?: string;
+  queryMatchCount?: number;
 }

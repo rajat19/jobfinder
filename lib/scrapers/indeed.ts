@@ -12,7 +12,7 @@ function buildUrl(keywords: string, location: string, start: number = 0): string
     l: location,
     start: String(start),
   });
-  return `https://www.indeed.com/jobs?${params.toString()}`;
+  return `https://in.indeed.com/jobs?${params.toString()}`;
 }
 
 function delay(ms: number): Promise<void> {

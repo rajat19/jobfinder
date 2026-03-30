@@ -171,6 +171,7 @@ export default function HomePage() {
   const [statusMessage, setStatusMessage] = useState('');
   const [progress, setProgress] = useState({ completed: 0, total: 0 });
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [queryNote, setQueryNote] = useState<string | null>(null);
 
   // Filters
   const [platformFilter, setPlatformFilter] = useState<string>('all');
@@ -231,6 +232,7 @@ export default function HomePage() {
     setResults([]);
     setProgress({ completed: 0, total: 0 });
     setStatusMessage('Initializing search...');
+    setQueryNote(null);
 
     abortRef.current = new AbortController();
 
@@ -295,6 +297,7 @@ export default function HomePage() {
                 break;
               case 'done':
                 if (data.results) setResults(data.results);
+                if (data.queryNote) setQueryNote(data.queryNote);
                 setSearching(false);
                 setStatusMessage(data.message || 'Done!');
                 break;
@@ -328,9 +331,14 @@ export default function HomePage() {
     return true;
   });
 
-  if (sortBy === 'score') {
-    filteredResults.sort((a, b) => b.matchScore - a.matchScore);
-  }
+  // Sort: query-matching jobs first, then by score within each group
+  filteredResults.sort((a, b) => {
+    const aRelevant = (a.queryMatch && a.locationMatch) ? 1 : 0;
+    const bRelevant = (b.queryMatch && b.locationMatch) ? 1 : 0;
+    if (aRelevant !== bRelevant) return bRelevant - aRelevant;
+    if (sortBy === 'score') return b.matchScore - a.matchScore;
+    return 0;
+  });
 
   const avgScore = filteredResults.length
     ? Math.round(filteredResults.reduce((sum, r) => sum + r.matchScore, 0) / filteredResults.length)
@@ -631,6 +639,16 @@ export default function HomePage() {
               Try Again
             </Button>
           </Card>
+        )}
+
+        {/* Query Summary Note */}
+        {queryNote && results.length > 0 && (
+          <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+            <span className="text-lg">📋</span>
+            <span className="text-sm font-semibold text-primary">
+              {queryNote}
+            </span>
+          </div>
         )}
 
         {/* Filters */}
